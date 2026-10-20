@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>人物のせいかくと行動を表す言葉</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+<style>
+/* 国語アプリ ひな形2（「つなぐ言葉」アプリのつくりをもとにした土台）
+   1画面アプリ：見出し → タブ → パネル（パネルの中だけで完結）。横はば最大 1480px */
+:root{
+  --ink:#24323d;
+  --ink-soft:#5b6b77;
+  --glass:rgba(255,255,255,.58);
+  --glass-strong:rgba(255,255,255,.82);
+  --line:rgba(255,255,255,.75);
+  --blue:#2b78b8;   --blue-bg:#e3f0fa;
+  --orange:#d9661f; --orange-bg:#fdebdc;
+  --green:#3a8f45;  --green-bg:#e3f3e2;
+  --red:#d23c3c;
+  --gl:#7B4FB8; --gl-soft:#F4EFFB; --gl-line:#CDB9EC; --gl-ink:#6A40A8; --gl-dash:#DDD0F2; --gl-ph:#C7B8E0; --wcard:#FFFFFF; --wline:rgba(90,60,140,.18);
+  --font:'M PLUS Rounded 1c','Hiragino Maru Gothic ProN','Yu Gothic',sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{
+  margin:0;min-height:100vh;font-family:var(--font);color:var(--ink);
+  background:linear-gradient(135deg,#bfe0f3 0%,#f9e6cf 52%,#d5edc8 100%);
+  background-color:#e9eee6;
+  display:flex;justify-content:center;align-items:center;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:12px;box-sizing:border-box;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+ruby rt{font-size:.45em;font-weight:500}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid #ffb74d;outline-offset:2px}
+
+/* ===== 画面のわく（横はば 1480px まで・高さ 880px まで） ===== */
+.app{width:min(1480px,100%);height:100%;max-height:880px;display:flex;flex-direction:column;gap:10px;min-height:0}
+
+/* 見出し */
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.leaf{width:46px;height:46px;flex:none;position:relative}
+.leaf i{position:absolute;width:18px;height:11px;border-radius:50%;left:14px;top:17px}
+.leaf i:nth-child(1){background:var(--blue);transform:rotate(0deg) translate(0,-15px)}
+.leaf i:nth-child(2){background:var(--orange);transform:rotate(60deg) translate(0,-15px)}
+.leaf i:nth-child(3){background:var(--green);transform:rotate(120deg) translate(0,-15px)}
+.leaf i:nth-child(4){background:var(--blue);transform:rotate(180deg) translate(0,-15px)}
+.leaf i:nth-child(5){background:var(--orange);transform:rotate(240deg) translate(0,-15px)}
+.leaf i:nth-child(6){background:var(--green);transform:rotate(300deg) translate(0,-15px)}
+.eyebrow{font-size:.85rem;font-weight:700;color:var(--green);letter-spacing:.08em}
+h1{margin:0;font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;line-height:1.2}
+h1 em{font-style:normal;color:var(--orange)}
+h1 .b{color:var(--blue)}h1 .o{color:var(--orange)}h1 .g{color:var(--green)}
+
+/* タブ（数は TABS から自動。1行にならぶ） */
+.tabs{display:grid;grid-template-columns:repeat(var(--n,4),1fr);gap:8px}
+.tab{border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-radius:16px;padding:8px 10px;font-size:1.05rem;font-weight:800;text-align:center;
+  box-shadow:0 4px 14px rgba(40,60,80,.08);transition:transform .2s,background .2s,box-shadow .2s}
+.tab small{display:block;font-size:.72rem;font-weight:500;color:var(--ink-soft)}
+.tab:hover{transform:translateY(-2px)}
+.tab[aria-selected="true"]{background:#fff;box-shadow:0 6px 18px rgba(40,60,80,.16)}
+.tab.word{background:var(--gl-soft);color:var(--gl-ink)}
+.tab.word small{color:var(--gl-ink)}
+.tab.word[aria-selected="true"]{background:var(--gl);color:#fff}
+.tab.word[aria-selected="true"] small{color:#fff}
+.tab:not(.word)[aria-selected="true"]::after{content:"";display:block;height:4px;border-radius:4px;margin:5px auto 0;width:40%;
+  background:linear-gradient(90deg,var(--blue),var(--orange),var(--green))}
+
+/* パネル（タブの中身が入るところ。はみ出さない） */
+.panel{flex:1;min-height:0;background:var(--glass);border:1px solid var(--line);border-radius:24px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 10px 32px rgba(40,60,80,.12);
+  padding:18px 20px;display:flex;flex-direction:column;gap:12px;overflow:hidden;
+  animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ===== どのタブでも使える部品 ===== */
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bar .lead{font-weight:700;font-size:1.02rem;flex:1;min-width:0}
+.seg{display:inline-flex;background:rgba(255,255,255,.6);border-radius:999px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;border-radius:999px;padding:7px 16px;font-weight:700;font-size:.95rem;transition:background .2s}
+.seg button.on{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.btn{border:0;border-radius:14px;padding:10px 18px;font-weight:800;font-size:1rem;background:#fff;
+  box-shadow:0 3px 10px rgba(40,60,80,.14);transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(40,60,80,.18)}
+.btn:active{transform:translateY(0)}
+.btn.main{background:var(--ink);color:#fff}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.label{font-size:.88rem;font-weight:800;color:var(--ink-soft)}
+.box{background:var(--glass-strong);border-radius:20px;padding:16px 18px;box-shadow:0 4px 14px rgba(40,60,80,.08)}
+/* 色（--c＝文字・線、--cbg＝うすい背景） */
+.c-blue{--c:var(--blue);--cbg:var(--blue-bg)}
+.c-orange{--c:var(--orange);--cbg:var(--orange-bg)}
+.c-green{--c:var(--green);--cbg:var(--green-bg)}
+.cw{color:var(--c);background:var(--cbg);border-radius:8px;padding:0 6px}
+
+/* ===== reveal：「？」をおしてひらくカード ===== */
+.cards{flex:1;min-height:0;display:grid;grid-template-columns:repeat(var(--cn,3),1fr);gap:14px}
+.card{background:var(--glass-strong);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:0;
+  border-top:6px solid var(--c);box-shadow:0 4px 14px rgba(40,60,80,.08)}
+.card .num{font-weight:800;color:var(--c);font-size:.9rem}
+.sent{font-size:clamp(1.15rem,2.1vw,1.5rem);font-weight:700;line-height:1.9;flex:none}
+.lpic{flex:1;min-height:90px;border-radius:12px;background:#fff center/contain no-repeat;transition:opacity .35s}
+.lpic.wait{background:transparent;border:2px dashed var(--c);display:grid;place-items:center;color:var(--c);font-weight:700;font-size:.9rem;opacity:.6}
+.sent .word{display:inline-block;min-width:4.2em;text-align:center;border-radius:10px;padding:0 8px;margin:0 2px;
+  border:2px dashed var(--c);color:var(--c);background:transparent;font-weight:800;font-size:inherit;line-height:1.5;transition:background .25s}
+.sent .word.open{border-style:solid;background:var(--cbg)}
+.how{border-radius:14px;background:var(--cbg);padding:10px 14px;font-size:clamp(1.05rem,1.65vw,1.3rem);line-height:1.6;opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s}
+.how.show{opacity:1;transform:none}
+.how b{color:var(--c)}
+.seg button .ck{color:var(--green);margin-left:3px}
+.rvlist{flex:none;background:var(--glass-strong);border-radius:18px;padding:10px 14px;display:flex;flex-direction:column;gap:7px;box-shadow:0 4px 14px rgba(40,60,80,.08)}
+.rvwords{display:flex;flex-wrap:wrap;gap:8px}
+.rvw{background:#fff;border:2px solid rgba(40,60,80,.18);border-radius:999px;padding:3px 14px;font-weight:800;font-size:clamp(1rem,1.6vw,1.2rem);line-height:1.5;transition:opacity .3s}
+@media (max-width:1100px) and (min-width:761px){.sent{line-height:1.65}.card{padding:12px 14px;gap:8px;overflow:auto}.how{font-size:1.05rem;line-height:1.5}}
+@media (max-height:720px) and (min-width:761px){.rvlist{padding:6px 12px;gap:4px}.rvw{font-size:1rem;padding:1px 12px}.rvwords{gap:6px}}
+
+/* ===== quiz：えらぶクイズ ===== */
+.qwrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots i{width:22px;height:8px;border-radius:6px;background:rgba(255,255,255,.8)}
+.dots i.ok{background:var(--green)}.dots i.ng{background:var(--red)}.dots i.now{background:var(--ink)}
+.qcard{background:var(--glass-strong);border-radius:20px;padding:18px 22px;display:flex;flex-direction:column;gap:6px}
+.qtag{font-size:.88rem;font-weight:700;color:var(--orange)}
+.qtext{font-size:clamp(1.25rem,2.5vw,1.75rem);font-weight:700;line-height:1.8}
+.blank{display:inline-block;min-width:4.5em;text-align:center;border:3px solid var(--ink);border-radius:10px;padding:0 8px;margin:0 3px;line-height:1.45;background:#fff}
+.blank.ok{border-color:var(--green);color:var(--green)}
+.blank.ng{border-color:var(--red);color:var(--red)}
+.opts{display:grid;grid-template-columns:repeat(var(--on,3),1fr);gap:12px}
+.opt{border:0;border-radius:18px;padding:14px 10px;font-size:clamp(1.2rem,2.3vw,1.6rem);font-weight:800;background:#fff;
+  box-shadow:0 4px 12px rgba(40,60,80,.12);transition:transform .15s,background .2s,opacity .2s;border-bottom:5px solid var(--c)}
+.opt:hover:not(:disabled){transform:translateY(-3px)}
+.opt:disabled{cursor:default}
+.opt.right{background:var(--green-bg);outline:3px solid var(--green)}
+.opt.wrong{background:#fde2e2;outline:3px solid var(--red)}
+.opt.dim{opacity:.45}
+.fb{display:flex;gap:14px;align-items:flex-start;opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s;min-height:0}
+.fb.show{opacity:1;transform:none}
+.fb .mark{font-size:2.2rem;font-weight:800;line-height:1}
+.fb .mark.ok{color:var(--green)}.fb .mark.ng{color:var(--red)}
+.fb .ex{flex:1;min-width:0;font-size:1rem;line-height:1.6}
+.fb .alt{margin-top:6px;background:rgba(255,255,255,.75);border-radius:12px;padding:6px 12px;font-weight:700}
+.fb .alt small{display:block;font-weight:500;color:var(--ink-soft);font-size:.8rem}
+.fb .alt b{color:var(--orange)}
+.nextrow{display:flex;justify-content:flex-end;margin-top:auto}
+.result{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+.result .score{font-size:clamp(2.6rem,7vw,4.2rem);font-weight:800}
+.result .score small{font-size:.4em;color:var(--ink-soft)}
+.result p{margin:0;font-size:1.15rem;font-weight:700;max-width:34em;line-height:1.6}
+
+/* ===== 単元ごとに足すタブの CSS は、ここに書く ===== */
+/* ② rensou：せいかくから連想（言葉をえらんで、人物の箱に入れる） */
+.rs{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px}
+.tray{flex:none;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;min-height:62px;
+  background:var(--glass-strong);border-radius:20px;padding:10px 14px;box-shadow:0 4px 14px rgba(40,60,80,.08)}
+.tray .empty{color:var(--ink-soft);font-weight:700}
+.chip{border:3px solid transparent;border-radius:999px;padding:6px 18px;font-size:clamp(1.1rem,1.9vw,1.4rem);font-weight:800;background:#fff;
+  box-shadow:0 3px 10px rgba(40,60,80,.14);transition:transform .15s,border-color .15s,box-shadow .15s;line-height:1.5}
+.chip:hover{transform:translateY(-2px)}
+.chip.sel{border-color:var(--ink);transform:translateY(-4px);box-shadow:0 8px 16px rgba(40,60,80,.22)}
+.rcols{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr) .8fr;gap:12px}
+.c-gray{--c:#7a8691;--cbg:#eef1f3}
+.tray .chip.used{background:#eef1f3;color:var(--ink-soft);box-shadow:none}
+.tray .chip.used.sel{background:#fff;color:var(--ink)}
+.rcol.none .rhead{font-size:clamp(1rem,1.6vw,1.2rem)}
+.rcol{border:0;text-align:left;background:var(--glass-strong);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;
+  min-height:0;overflow:auto;border-top:6px solid var(--c);box-shadow:0 4px 14px rgba(40,60,80,.08);transition:box-shadow .2s,background .2s}
+.rcol.ready{background:#fff;box-shadow:0 0 0 3px var(--c),0 6px 16px rgba(40,60,80,.14)}
+.rhead{font-size:clamp(1.1rem,1.9vw,1.4rem);font-weight:700;line-height:1.7}
+.rhead .cw{font-weight:800}
+.rin{flex:1;min-height:60px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:8px;border:2px dashed var(--c);border-radius:14px;padding:10px}
+.rin .hint{color:var(--c);opacity:.6;font-weight:700;font-size:.9rem}
+.rin .chip{background:var(--cbg);color:var(--c);border-color:transparent;font-size:clamp(1rem,1.7vw,1.25rem);padding:4px 14px}
+.rex{flex:none;border-radius:14px;background:var(--cbg);padding:8px 12px;font-size:.98rem;line-height:1.6}
+.rex b{color:var(--c)}
+.rnote{flex:none;font-size:.95rem;line-height:1.6;background:rgba(255,255,255,.75);border-radius:12px;padding:6px 12px}
+
+/* ④ write：人物を想像して、短い文を書く */
+.wt{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1.25fr;gap:14px}
+.wt .box{display:flex;flex-direction:column;gap:10px;min-height:0}
+.wtchips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.wtchips .chip{padding:8px 6px;font-size:clamp(1rem,1.6vw,1.2rem)}
+.wthint{flex:1;min-height:0;overflow:auto;border-radius:14px;background:var(--orange-bg);padding:10px 12px;font-size:1rem;line-height:1.7}
+.wthint b{color:var(--orange)}
+.wtline{font-size:clamp(1.1rem,1.9vw,1.4rem);font-weight:700;line-height:1.8;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.wtline input{font:inherit;font-weight:700;width:7em;border:2px solid rgba(40,60,80,.25);border-radius:10px;padding:2px 10px;background:#fff;color:var(--ink)}
+.wtline .wtw{color:var(--orange);background:var(--orange-bg);border-radius:8px;padding:0 8px;min-width:4em;text-align:center}
+.wt textarea{font:inherit;font-size:1.15rem;line-height:1.6;border:2px solid rgba(40,60,80,.25);border-radius:12px;padding:8px 12px;
+  resize:none;height:4.6em;flex:none;background:#fff;color:var(--ink)}
+.wt textarea:focus,.wtline input:focus{outline:3px solid #ffb74d;outline-offset:1px}
+.wtrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.wtmsg{font-weight:700;font-size:.95rem;color:var(--red);flex:1;min-width:0}
+.wtmsg.ok{color:var(--green)}
+.wtlist{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.wtlist .none{color:var(--ink-soft);font-weight:700;font-size:.95rem}
+.wtitem{background:#fff;border-radius:14px;padding:8px 12px;font-size:1.05rem;line-height:1.6;border-left:6px solid var(--orange);animation:fade .35s ease}
+.wtitem b{color:var(--orange)}
+.wqcard{gap:10px}
+.wqtext{font-size:clamp(1.3rem,2.6vw,1.9rem);font-weight:700;line-height:1.7;background:var(--orange-bg);border-radius:14px;padding:10px 16px}
+
+/* ⑤ story：物語の人物 */
+.st{flex:1;min-height:0;display:grid;grid-template-columns:.95fr 1.35fr .9fr;gap:12px}
+.st .box{display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto;padding:12px 14px}
+.stbooks{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.stbooks .chip,.stppl .chip,.sttraits .chip{font-size:clamp(.88rem,1.3vw,1.05rem);padding:4px 10px;line-height:1.4}
+.stppl{display:flex;flex-wrap:wrap;gap:7px;min-height:42px;align-items:center}
+.stppl input,.stin{font:inherit;font-weight:700;font-size:1rem;border:2px solid rgba(40,60,80,.25);border-radius:10px;padding:5px 10px;background:#fff;color:var(--ink);min-width:0}
+.stppl input{flex:1 1 8em}
+.stppl .none,.st .none{color:var(--ink-soft);font-weight:700;font-size:.95rem}
+.stex{flex:1;min-height:0;overflow:auto;border-radius:14px;background:var(--blue-bg);padding:10px 12px;font-size:1rem;line-height:1.7}
+.stex b{color:var(--blue)}
+.stex.mute{background:rgba(255,255,255,.6)}
+.sttraits{display:flex;flex-wrap:wrap;gap:5px}
+.st textarea{font:inherit;font-size:1.05rem;line-height:1.6;border:2px solid rgba(40,60,80,.25);border-radius:12px;padding:8px 12px;resize:none;height:3.4em;flex:none;background:#fff;color:var(--ink)}
+.st textarea:focus,.stin:focus,.stppl input:focus{outline:3px solid #ffb74d;outline-offset:1px}
+.stitem{border-left-color:var(--blue)}
+.stitem small{display:block;color:var(--ink-soft);font-weight:700}
+.stitem b{color:var(--ink)}
+.stitem .sttr{color:var(--blue);font-weight:800}
+
+/* ===== 重要語句（ひな形1・つなぐ言葉と同じつくり：12まいずつ） ===== */
+.wdocs{flex:1;display:grid;grid-template-columns:1.6fr 1fr;gap:.55rem;min-height:0}
+.wboard{position:relative;background:var(--wcard);border:1px solid var(--wline);border-radius:14px;padding:.5rem;
+  display:flex;flex-direction:column;gap:.45rem;min-height:0;min-width:0;overflow:hidden}
+.wgridbox{position:relative;flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.wgrid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-rows:repeat(3,minmax(0,1fr));gap:.45rem}
+.wgrid.flip{animation:win .25s ease both}
+@keyframes win{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes wzoom{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.wcard{font:inherit;position:relative;cursor:pointer;background:var(--wcard);border:2px solid var(--wline);border-radius:12px;
+  padding:.35rem .35rem .2rem;display:flex;flex-direction:column;gap:.15rem;min-height:0;min-width:0;color:var(--ink);transition:.15s}
+.wcard:hover{border-color:var(--gl)}
+.wcard.on{border-color:var(--gl);box-shadow:0 0 0 3px rgba(123,79,184,.25)}
+.wcard .wno{position:absolute;top:.3rem;left:.3rem;z-index:2;min-width:1.75em;height:1.75em;padding:0 .2em;border-radius:99px;
+  background:var(--wcard);border:2px solid var(--gl);color:var(--gl);font-weight:800;font-size:.8rem;line-height:1;display:grid;place-items:center}
+.wpic{flex:1 1 auto;min-height:0;border-radius:8px;background:var(--gl-soft) center/contain no-repeat;display:grid;place-items:center;overflow:hidden}
+.wpic.has{background-color:#fff}
+.wpic .wph{font-weight:700;color:var(--gl-ph);font-size:.7rem;text-align:center;line-height:1.4}
+.wcap{flex:0 0 auto;font-weight:800;font-size:1rem;line-height:1.25;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:.35em}
+.wcap ruby rt,.wbigcap ruby rt,.wd-word ruby rt{font-size:.5em;letter-spacing:.02em;font-weight:500}
+.wcard.blank{visibility:hidden}
+.wpager{flex:0 0 auto;display:flex;justify-content:center;flex-wrap:wrap;gap:.45rem}
+.wpager:empty{display:none}
+.wpager button{font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;background:var(--gl-soft);border:2px solid var(--gl-line);
+  color:var(--gl-ink);border-radius:99px;padding:.22rem 1.15rem;transition:.15s}
+.wpager button:hover{border-color:var(--gl)}
+.wpager button.on{background:var(--gl);border-color:var(--gl);color:#fff;box-shadow:0 1px 3px rgba(14,42,66,.25)}
+.wbig{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;gap:.35rem;background:var(--wcard);
+  padding:.1rem;cursor:zoom-out;animation:wzoom .22s ease-out both}
+.wbig .wpic{border:1px solid var(--wline)}
+.wbig .wbigword{font-weight:800;font-size:3.2rem;color:var(--gl);line-height:1.6}
+.wbig .wbigcap{flex:0 0 auto;text-align:center;font-weight:800;font-size:1.4rem;line-height:1.5}
+.wbig .wback{flex:0 0 auto;text-align:center;font-size:.8rem;color:var(--ink-soft)}
+.wdetail{background:var(--wcard);border:1px solid var(--wline);border-radius:14px;padding:.9rem 1rem;
+  display:flex;flex-direction:column;gap:.7rem;min-height:0;min-width:0;overflow:hidden}
+.wd-head{flex:0 0 auto;display:flex;align-items:center;gap:.6rem;border-bottom:2px dashed var(--gl-dash);padding-bottom:.5rem}
+.wd-no{font-weight:800;font-size:1.05rem;background:var(--gl);color:#fff;min-width:1.8em;height:1.8em;padding:0 .35em;
+  border-radius:99px;display:grid;place-items:center;flex:0 0 auto;line-height:1}
+.wd-word{font-weight:800;font-size:1.7rem;line-height:1.5;color:var(--ink)}
+.wd-nav{margin-left:auto;display:flex;gap:.3rem;flex:0 0 auto}
+.wd-nav button{font:inherit;cursor:pointer;background:var(--gl-soft);border:2px solid var(--gl-line);color:var(--gl-ink);border-radius:9px;
+  width:2.3rem;height:2.3rem;display:grid;place-items:center;font-size:1.2rem;line-height:1}
+.wd-nav button:hover{border-color:var(--gl)}
+.wd-txt{flex:1 1 auto;min-height:0;font-size:1.3rem;line-height:2.1;overflow:auto;margin:0}
+.wd-txt .wl{display:block}
+.wd-txt .wl + .wl{margin-top:.6em}
+.wd-txt em{font-style:normal;font-weight:700;color:var(--red)}
+.wd-txt ruby rt{font-size:.45em;font-weight:500;letter-spacing:.04em}
+.wd-tip{flex:0 0 auto;font-size:.75rem;color:var(--ink-soft);background:var(--gl-soft);border-radius:8px;padding:.4rem .7rem;line-height:1.5;margin:0}
+
+/* ===== スマホ（はば 760px 以下）：パネルの中だけスクロール ===== */
+@media (max-width:760px){
+  body{padding-block:8px}
+  .app{gap:8px}
+  .leaf{display:none}
+  .tabs{grid-template-columns:repeat(3,1fr);gap:6px}
+  .tab{font-size:.88rem;padding:6px 4px}
+  .tab small{display:none}
+  .panel{padding:14px;overflow:auto}
+  .cards{grid-template-columns:1fr;flex:none}
+  .lpic{flex:none;height:180px}
+  .rs{flex:none}
+  .rcols{grid-template-columns:1fr;flex:none}
+  .wt{grid-template-columns:1fr;flex:none}
+  .wthint{flex:none}
+  .wtlist{flex:none;max-height:none}
+  .st{grid-template-columns:1fr;flex:none}
+  .st .box{overflow:visible}
+  .stex{flex:none}
+  .bar .lead{flex-basis:100%}
+  .opts{gap:8px}
+  .opt{padding:12px 4px}
+  .wdocs{grid-template-columns:1fr;grid-template-rows:minmax(420px,1.9fr) auto;flex:none}
+  .wgrid{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr))}
+}
+@media (max-height:720px) and (min-width:761px){
+  .sent{line-height:1.7}
+  .qcard{padding:12px 18px}
+  .panel{padding:14px 18px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="leaf" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div>
+      <div class="eyebrow" id="eyebrow"></div>
+      <h1 id="title"></h1>
+    </div>
+  </header>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main class="panel" id="panel"></main>
+</div>
+
+<script>
+/* ===== 共通の道具（さわらない） ===== */
+let AC=null;
+function ac(){ if(!AC){ try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } if(AC&&AC.state==='suspended')AC.resume(); return AC; }
+function tone(f,start,dur,type,vol){
+  const a=ac(); if(!a)return;
+  const o=a.createOscillator(),g=a.createGain();
+  o.type=type;o.frequency.value=f;o.connect(g);g.connect(a.destination);
+  const t=a.currentTime+start;
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.start(t);o.stop(t+dur+0.05);
+}
+function pinpon(){ tone(1046,0,0.45,'sine',0.35); tone(784,0.22,0.6,'sine',0.35); }
+function bubu(){ tone(150,0,0.28,'square',0.18); tone(150,0.32,0.4,'square',0.18); }
+function party(){
+  if(typeof confetti!=='function')return;
+  confetti({particleCount:140,spread:90,origin:{y:.6}});
+  setTimeout(()=>confetti({particleCount:90,angle:60,spread:70,origin:{x:0,y:.7}}),250);
+  setTimeout(()=>confetti({particleCount:90,angle:120,spread:70,origin:{x:1,y:.7}}),400);
+}
+const $=s=>document.querySelector(s);
+const panel=$('#panel');
+function esc(s){return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const COLORS=['c-blue','c-orange','c-green'];
+const VIEWS={};   /* タブの中身をつくる関数。VIEWS.名前 = function(){ panel.innerHTML = … } */
+
+
+/* ▼▼▼ ここから下が「単元ごとに書きかえる」ところ ▼▼▼ */
+
+const UNIT = {
+  eyebrow:'4年 国語 ／ 言葉相談室',
+  title:'人物の<span class="b">せいかく</span>と<em>行動</em>を表す言葉'
+};
+
+/* タブ：上から順に左からならぶ。view は VIEWS の名前（reveal・quiz・words は用意ずみ） */
+const TABS = [
+  {view:'reveal',  tab:'① 行動からせいかく', sub:'「？」をおす'},
+  {view:'rensou',  tab:'② せいかくから連想', sub:'言葉をえらぶ'},
+  {view:'quiz',    tab:'③ 当てはまる行動',   sub:'auto'},
+  {view:'write',   tab:'④ 人物を想像しよう', sub:'短い文を書く'},
+  {view:'story',   tab:'⑤ 物語の人物',       sub:'会話や行動から'},
+  {view:'words',   tab:'重要語句',           sub:'ことばのいみ'}
+];
+
+/* ---- ① reveal：行動から、せいかくを表す言葉を考える ---- */
+const REVEAL = {
+  lead:'行動を読んで、どんなせいかくか考えよう。「？」をおすと、せいかくを表す言葉が出るよ。',
+  cards:[
+    {c:'c-blue',   num:'① 言葉相談室の物語', text:'主人公は、分かれ道に来ると、いつもまよってしまう。主人公は□な人物だ。',
+     a:'ゆうじゅうふだん', how:'<b>なかなか決められない</b>せいかくを表す言葉。「いつもまよう」という行動から分かるね。', img:''},
+    {c:'c-orange', num:'② 「モチモチの木」', text:'豆太は、夜中に一人でせっちんに行けない。豆太は□だ。',
+     a:'おく病', how:'<b>すぐにこわがる</b>せいかくを表す言葉。教科書のれいにも出てくるよ。', img:''},
+    {c:'c-green',  num:'③ ある人', text:'出かける前に天気予報をたしかめて、おりたたみがさも持っていく。この人は□だ。',
+     a:'用心深い', how:'<b>しっぱいしないように、前もってよく気をつける</b>せいかくを表す言葉。', img:''},
+    {c:'c-blue',   num:'④ ある人', text:'思いどおりにならないと、すぐにおこって、大きな声を出してしまう。この人は□だ。',
+     a:'短気', how:'<b>すぐにおこったり、いらいらしたりする</b>せいかくを表す言葉。「おだやか」の反対だね。', img:''},
+    {c:'c-orange', num:'⑤ ある人', text:'こまっている一年生を見ると、すぐにかけよって声をかける。この人は□。',
+     a:'やさしい', how:'<b>人の気持ちを思いやって、親切にする</b>せいかくを表す言葉。', img:''},
+    {c:'c-green',  num:'⑥ ある人', text:'みんなが「こっちの道が近いよ」と言っても、自分が決めた道をぜったいに変えない。この人は□だ。',
+     a:'がんこ', how:'<b>自分の考えをかたく守って、人の言うことを聞き入れない</b>せいかくを表す言葉。', img:''},
+    {c:'c-blue',   num:'⑦ ある人', text:'なわとびの二重とびができるまで、毎日休まずに練習を続けた。この人は□。',
+     a:'根気強い', how:'<b>いやになったりあきたりせず、最後まで続ける</b>せいかくを表す言葉。', img:''},
+    {c:'c-orange', num:'⑧ ある人', text:'ドッジボールでも鬼ごっこでも、いつも元気いっぱいに走り回っている。この人は□だ。',
+     a:'活発', how:'<b>元気がよく、いきいきと動き回る</b>せいかくを表す言葉。', img:''},
+    {c:'c-green',  num:'⑨ ある人', text:'じゃんけんで負けると、「もう一回！」と言って、勝つまでやめない。この人は□だ。',
+     a:'負けずぎらい', how:'<b>人に負けるのが、とてもいや</b>なせいかくを表す言葉。', img:''},
+    {c:'c-blue',   num:'⑩ ある人', text:'わすれ物をしないように、前の日のうちに時間わりをそろえておく。この人は□人だ。',
+     a:'しっかりした', how:'<b>考えや行動がたしかで、たよりになる</b>せいかくを表す言葉。', img:''},
+    {c:'c-orange', num:'⑪ ある人', text:'「今日は本を読む」と言っていたのに、少しすると「やっぱり工作をする」と言い出した。この人は□だ。',
+     a:'気まぐれ', how:'<b>その時の気分で、考えや行動がころころ変わる</b>せいかくを表す言葉。', img:''},
+    {c:'c-green',  num:'⑫ ある人', text:'いつもにこにこしてじょうだんを言い、まわりのみんなをわらわせている。この人は□だ。',
+     a:'陽気', how:'<b>明るくてほがらかで、元気のよい</b>せいかくを表す言葉。', img:''}
+  ],
+  per:3,   /* 1つの画面に出すカードの数。これより多いと「もう一度」の左に切りかえボタンが出る */
+  /* 下に出す「せいかくを表す言葉」の一覧（ここから考える） */
+  choices:['やさしい','短気','おく病','陽気','がんこ','用心深い','ゆうじゅうふだん','活発','気まぐれ','根気強い','しっかりした','負けずぎらい']
+};
+
+/* ---- ② rensou：せいかくから連想される言葉を、人物の箱に入れる ----
+   考えは一つではないので、正かい・不正かいはつけない。「れいを見る」で考えのれいが出る */
+const RENSOU = {
+  lead:'言葉をおして、つぎに「この人かな」と思う箱をおそう。一つの言葉を二つの人物に入れてもいいよ。箱の中の言葉をおすと、とり出せるよ。',
+  people:[
+    {c:'c-blue',   name:'大山さん', trait:'おだやか',     ex:'<b>温和</b>・<b>やさしい</b>・<b>もの静か</b> など'},
+    {c:'c-orange', name:'村田さん', trait:'負けずぎらい', ex:'<b>勝ち気</b>・<b>気が強い</b>・<b>前向き</b> など'},
+    {c:'c-green',  name:'山口さん', trait:'ひかえめ',     ex:'<b>おとなしい</b>・<b>もの静か</b>・<b>真面目</b> など'}
+  ],
+  none:{c:'c-gray', head:'どれにも入らない言葉', ex:'<b>短気</b>（「おだやか」と<b>反対</b>の意味）'},
+  chips:['温和','もの静か','前向き','短気','真面目','おとなしい','勝ち気','やさしい','気が強い'],
+  note:'「もの静か」のように、<b>二つの人物に合う言葉</b>もあるね。考えは一つではないので、どうしてそう思ったのか、友だちと話し合おう。'
+};
+
+/* ---- ③ quiz：せいかくに当てはまる行動をえらぶ ---- */
+const QUIZ = {
+  shuffle:false,
+  shuffleOpts:true,   /* true で、毎回 選たくしのならびが入れかわる */
+  qs:[
+    {tag:'教科書 ①', q:'大山さんはおだやかな人だ。周りでふざけていても、いつも□。', o:['ほほえんでいる','わらい転げている'], a:0,
+     e:'おだやかな人は、落ち着いている。大さわぎせず、<b>ほほえんでいる</b>ほうが合うね。'},
+    {tag:'教科書 ②', q:'村田さんは負けずぎらいな人だ。マラソン大会で三位になって、□。', o:['大よろこびしていた','くやし泣きしていた'], a:1,
+     e:'負けずぎらいな人は、負けるのがとてもいや。一位になれず、<b>くやし泣き</b>したのだね。'},
+    {tag:'教科書 ③', q:'山口さんはひかえめな人だ。みんなで話すときは、いつも□。', o:['自分から話している','人の話を聞いている'], a:1,
+     e:'ひかえめな人は、自分から前に出ようとしない。<b>人の話を聞いている</b>ほうが合うね。'},
+    {tag:'れんしゅう ④', q:'田中さんは<ruby>陽気<rt>ようき</rt></ruby>な人だ。休み時間には、いつも□。', o:['みんなとわらいながら遊んでいる','一人でだまって外を見ている'], a:0,
+     e:'陽気な人は、明るくてほがらか。<b>わらいながら遊んでいる</b>ほうが合うね。'},
+    {tag:'れんしゅう ⑤', q:'森さんは<ruby>根気<rt>こんき</rt></ruby>強い人だ。むずかしいパズルでも、□。', o:['すぐにあきらめてしまう','できるまで何度もちょうせんする'], a:1,
+     e:'根気強い人は、あきずに最後まで続ける。<b>何度もちょうせんする</b>ほうが合うね。'},
+    {tag:'れんしゅう ⑥', q:'川上さんは<ruby>用心<rt>ようじん</rt></ruby>深い人だ。道をわたるときは、□。', o:['右と左をよく見てからわたる','走ってすぐにわたる'], a:0,
+     e:'用心深い人は、あぶなくないようによく気をつける。<b>よく見てからわたる</b>ほうが合うね。'},
+    {tag:'れんしゅう ⑦', q:'小林さんはおく病な人だ。暗い夜道では、□。', o:['平気でずんずん歩いていく','こわくて足がすくんでしまう'], a:1,
+     e:'おく病な人は、すぐにこわがる。<b>足がすくんでしまう</b>ほうが合うね。'},
+    {tag:'れんしゅう ⑧', q:'木村さんは気まぐれな人だ。昼休みに何をして遊ぶかは、□。', o:['その日の気分でころころ変わる','毎日きっちり同じに決まっている'], a:0,
+     e:'気まぐれな人は、その時の気分で考えが変わる。<b>ころころ変わる</b>ほうが合うね。'},
+    {tag:'れんしゅう ⑨', q:'中村さんはやさしい人だ。友だちが転んでけがをしたとき、□。', o:['すぐにかけよって声をかけた','気づかないふりをして遊び続けた'], a:0,
+     e:'やさしい人は、人の気持ちを思いやって親切にする。<b>すぐにかけよった</b>ほうが合うね。'},
+    {tag:'れんしゅう ⑩', q:'石川さんは<ruby>短気<rt>たんき</rt></ruby>な人だ。友だちに少しからかわれただけで、□。', o:['「まあいいか」とわらってすませた','すぐにおこって大声を出した'], a:1,
+     e:'短気な人は、すぐにおこったりいらいらしたりする。<b>すぐにおこった</b>ほうが合うね。'},
+    {tag:'れんしゅう ⑪', q:'山本さんはがんこな人だ。きらいな野菜を「一口だけ食べてみたら」と言われても、□。', o:['「いやだ」と言って、ぜったいに食べない','「じゃあ、食べてみる」と口に入れる'], a:0,
+     e:'がんこな人は、自分の考えをかたく守って、人の言うことを聞き入れない。<b>ぜったいに食べない</b>ほうが合うね。'},
+    {tag:'れんしゅう ⑫', q:'西田さんは<ruby>前向<rt>まえむ</rt></ruby>きな人だ。テストで思ったより点が悪かったとき、□。', o:['「どうせだめだ」と、ずっと落ちこんでいた','「次はがんばるぞ」と、まちがえた問題をやり直した'], a:1,
+     e:'前向きな人は、よくないことがあっても、よいほうに考えて進もうとする。<b>やり直した</b>ほうが合うね。'},
+    {tag:'れんしゅう ⑬', q:'大野さんは<ruby>真面目<rt>まじめ</rt></ruby>な人だ。そうじの時間には、□。', o:['だれも見ていなくても、すみずみまでていねいにふく','ほうきをふり回してふざけている'], a:0,
+     e:'真面目な人は、いいかげんなことをせず、一生けん命に取り組む。<b>ていねいにふく</b>ほうが合うね。'},
+    {tag:'れんしゅう ⑭', q:'小川さんはゆうじゅうふだんな人だ。おみやげを買うとき、□。', o:['見てすぐに「これにする」と決めた','あれもいいな、これもいいなと、なかなか決められない'], a:1,
+     e:'ゆうじゅうふだんな人は、なかなか物事を決められない。<b>なかなか決められない</b>ほうが合うね。'}
+  ],
+  goodAt:11,
+  msg:{perfect:'ぜんもんせいかい！ せいかくと行動のつながりが、よく分かっているね。',
+       good:'あと少し！ まちがえた問題のせいかくの言葉を、重要語句でたしかめよう。',
+       low:'重要語句で言葉の意味をたしかめてから、もう一度ちょうせんしよう。'}
+};
+
+/* ---- ② rensou のうごき ----
+   rsPlace[言葉] は、入れた箱の番号の配列（3＝どれにも入らない）。人物の箱には二つ以上入れてよい。
+   「どれにも入らない」に入れると、人物の箱からはぬける（その反対も） */
+let rsPlace={}, rsSel=null, rsEx=false;
+function rsReset(){ rsPlace={}; RENSOU.chips.forEach(w=>rsPlace[w]=[]); rsSel=null; rsEx=false; }
+rsReset();
+function plop(){ tone(520,0,.16,'sine',.22); tone(780,.06,.14,'sine',.12); }   /* 正かい・不正かいのない「ポン」 */
+VIEWS.rensou = function(){
+  const P=RENSOU.people, N=P.length;
+  const boxes=P.map((p,i)=>({i, c:p.c, head:`${p.name}は <span class="cw">${p.trait}</span> な人だ。`, label:p.name, ex:p.ex}))
+    .concat([{i:N, c:RENSOU.none.c, head:RENSOU.none.head, label:RENSOU.none.head, ex:RENSOU.none.ex}]);
+  const allIn=RENSOU.chips.every(w=>rsPlace[w].length);
+  panel.innerHTML=`
+    <div class="rs">
+      <div class="bar"><div class="lead">${RENSOU.lead}</div>
+        <button class="btn" id="rsEx">${rsEx?'れいをかくす':'れいを見る'}</button>
+        <button class="btn" id="rsReset">もう一度</button></div>
+      <div class="tray">${RENSOU.chips.map(w=>`<button class="chip ${rsSel===w?'sel':''} ${rsPlace[w].length?'used':''}" data-w="${w}">${w}</button>`).join('')}
+        ${allIn?'<span class="empty">ぜんぶの言葉を入れたよ。どうしてそう考えたか、話してみよう。</span>':''}</div>
+      <div class="rcols" style="--rn:${boxes.length}">${boxes.map(bx=>{
+        const ins=RENSOU.chips.filter(w=>rsPlace[w].includes(bx.i));
+        const has=rsSel&&rsPlace[rsSel].includes(bx.i);
+        return `<div class="rcol ${bx.c} ${rsSel&&!has?'ready':''} ${bx.i===N?'none':''}" data-i="${bx.i}" role="button" tabindex="0" aria-label="${bx.label}の箱">
+          <div class="rhead">${bx.head}</div>
+          <div class="rin">${ins.length?ins.map(w=>`<button class="chip" data-back="${w}" data-from="${bx.i}">${w}</button>`).join('')
+            :'<span class="hint">ここに言葉を入れよう</span>'}</div>
+          ${rsEx?`<div class="rex">れい：${bx.ex}</div>`:''}
+        </div>`;}).join('')}</div>
+      ${rsEx?`<div class="rnote">${RENSOU.note}</div>`:''}
+    </div>`;
+  panel.querySelectorAll('.tray .chip').forEach(b=>b.onclick=()=>{
+    rsSel = rsSel===b.dataset.w ? null : b.dataset.w; tone(880,0,.12,'sine',.18); VIEWS.rensou();
+  });
+  panel.querySelectorAll('.rin .chip').forEach(b=>b.onclick=e=>{
+    e.stopPropagation(); const w=b.dataset.back, f=+b.dataset.from;
+    rsPlace[w]=rsPlace[w].filter(x=>x!==f); rsSel=null; VIEWS.rensou();
+  });
+  panel.querySelectorAll('.rcol').forEach(col=>{
+    const put=()=>{
+      if(!rsSel)return;
+      const i=+col.dataset.i, w=rsSel;
+      if(rsPlace[w].includes(i)){rsSel=null;VIEWS.rensou();return;}
+      const before=allIn;
+      rsPlace[w] = i===N ? [N] : rsPlace[w].filter(x=>x!==N).concat(i);
+      rsSel=null; plop(); VIEWS.rensou();
+      if(!before && RENSOU.chips.every(x=>rsPlace[x].length)) setTimeout(party,200);
+    };
+    col.onclick=put;
+    col.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();put();} };
+  });
+  $('#rsEx').onclick=()=>{rsEx=!rsEx;VIEWS.rensou();};
+  $('#rsReset').onclick=()=>{rsReset();VIEWS.rensou();};
+};
+
+/* ---- ④ write：せいかくの言葉をえらび、その人物の行動を想像して短い文を書く ----
+   na：「◯◯な人だ」の「な」がいるかどうか。hint：行動のれい */
+const WRITE = {
+  lead:'せいかくの言葉を一つえらんで、その人物がどんな行動をするか想像し、短い文を書こう。',
+  words:[
+    {w:'陽気',       na:true,  hint:'いつも大きな声でわらって、クラスのみんなを楽しませている。'},
+    {w:'やさしい',   na:false, hint:'こまっている友だちに、そっと声をかけている。'},
+    {w:'根気強い',   na:false, hint:'さかあがりができるまで、毎日公園で練習した。'},
+    {w:'おく病',     na:true,  hint:'かみなりの音がすると、ふとんにもぐりこんでしまう。'},
+    {w:'がんこ',     na:true,  hint:'一度「こうする」と決めたら、だれに何と言われても変えない。'},
+    {w:'用心深い',   na:false, hint:'家を出る前に、かぎをしめたか三回もたしかめる。'},
+    {w:'気まぐれ',   na:true,  hint:'朝は「サッカーをする」と言っていたのに、昼には絵をかき始めた。'},
+    {w:'活発',       na:true,  hint:'休み時間になると、いちばんに運動場へ走っていく。'},
+    {w:'しっかりした', na:false, hint:'わすれ物をしないように、前の日に時間わりをそろえている。'}
+  ],
+  partyAt:3   /* この数の文が書けたら紙吹雪 */
+};
+let wtSel=-1, wtList=[], wtDraft={name:'',text:''}, wtMode='write', wtQ=null;
+/* wtDraft：書きかけの名前・文（タブを切りかえても消えない）。wtMode：'write'（書く）か 'quiz'（当てっこクイズ） */
+VIEWS.write = function(){
+  if(wtMode==='quiz') return wtQuizView();
+  panel.innerHTML=`
+    <div class="bar"><div class="lead">${WRITE.lead}</div>
+      <button class="btn" id="wtQuiz" ${wtList.length?'':'disabled'}>当てっこクイズ</button>
+      <button class="btn" id="wtReset">もう一度</button></div>
+    <div class="wt">
+      <div class="box">
+        <div class="label">❶ せいかくの言葉をえらぶ</div>
+        <div class="wtchips">${WRITE.words.map((d,i)=>`<button class="chip ${wtSel===i?'sel':''}" data-i="${i}">${d.w}</button>`).join('')}</div>
+        <div class="label">ヒント（行動のれい）</div>
+        <div class="wthint" id="wtHint">言葉をえらんでから、「ヒントを見る」をおすと、行動のれいが出るよ。まずは自分で考えてみよう。</div>
+        <div class="wtrow"><button class="btn" id="wtShowHint">ヒントを見る</button></div>
+      </div>
+      <div class="box">
+        <div class="label">❷ 短い文を書く</div>
+        <div class="wtline"><input id="wtName" maxlength="10" placeholder="名前" aria-label="人物の名前">さんは、<span class="wtw" id="wtWord">？</span>人だ。</div>
+        <textarea id="wtText" maxlength="80" placeholder="（れい）休み時間になると、いちばんに運動場へ走っていく。" aria-label="行動を表す文"></textarea>
+        <div class="wtrow"><button class="btn main" id="wtAdd">書けた！</button><span class="wtmsg" id="wtMsg"></span></div>
+        <div class="label">❸ 書けた文（「当てっこクイズ」で、せいかくをかくして友だちに当ててもらおう）</div>
+        <div class="wtlist" id="wtList"></div>
+      </div>
+    </div>`;
+  const hint=$('#wtHint'), msg=$('#wtMsg');
+  $('#wtName').value=wtDraft.name; $('#wtText').value=wtDraft.text;
+  $('#wtName').oninput=e=>wtDraft.name=e.target.value;
+  $('#wtText').oninput=e=>wtDraft.text=e.target.value;
+  function drawWord(){
+    const d=WRITE.words[wtSel];
+    $('#wtWord').textContent = d ? d.w+(d.na?'な':'') : '？';
+  }
+  function drawList(){
+    $('#wtList').innerHTML = wtList.length ? wtList.map(x=>`<div class="wtitem"><b>${esc(x.head)}</b>${esc(x.text)}</div>`).join('')
+      : '<span class="none">まだありません。いくつかのせいかくで書いてみよう。</span>';
+    const L=$('#wtList'); L.scrollTop=L.scrollHeight;
+    $('#wtQuiz').disabled=!wtList.length;
+  }
+  panel.querySelectorAll('.wtchips .chip').forEach(b=>b.onclick=()=>{
+    wtSel=+b.dataset.i;
+    panel.querySelectorAll('.wtchips .chip').forEach(x=>x.classList.toggle('sel',x===b));
+    tone(880,0,.12,'sine',.18); drawWord();
+    hint.innerHTML='「<b>'+WRITE.words[wtSel].w+'</b>」な人は、どんな行動をするかな。まずは自分で考えてみよう。';
+    msg.textContent='';
+  });
+  $('#wtShowHint').onclick=()=>{
+    if(wtSel<0){hint.textContent='先に、❶でせいかくの言葉をえらぼう。';return;}
+    const d=WRITE.words[wtSel];
+    hint.innerHTML='<b>'+d.w+(d.na?'な':'')+'人</b>のれい：<br>'+d.hint;
+  };
+  $('#wtAdd').onclick=()=>{
+    const text=$('#wtText').value.trim(), name=$('#wtName').value.trim();
+    msg.className='wtmsg';
+    if(wtSel<0){msg.textContent='❶でせいかくの言葉をえらぼう。';bubu();return;}
+    if(!text){msg.textContent='行動を表す文を書こう。';bubu();return;}
+    const d=WRITE.words[wtSel];
+    const who=name?name+'さん':'ある人';
+    wtList.push({head:who+'は、'+d.w+(d.na?'な':'')+'人だ。', text:text, who:who, wi:wtSel});
+    $('#wtText').value=''; wtDraft.text=''; drawList(); pinpon();
+    msg.className='wtmsg ok'; msg.textContent='すてきな文が書けたね！ ほかのせいかくでも書いてみよう。';
+    if(wtList.length===WRITE.partyAt) setTimeout(party,150);
+  };
+  $('#wtQuiz').onclick=()=>{ wtQuizStart(); wtMode='quiz'; VIEWS.write(); };
+  $('#wtReset').onclick=()=>{wtSel=-1;wtList=[];wtDraft={name:'',text:''};VIEWS.write();};
+  drawWord(); drawList();
+};
+
+/* ---- ④ の当てっこクイズ：書けた文の、せいかくの言葉をかくして当てる（4択） ---- */
+function wtQuizStart(){
+  wtQ={list:shuffle(wtList).map(x=>{
+    const others=shuffle(WRITE.words.map((_,i)=>i).filter(i=>i!==x.wi)).slice(0,3);
+    const o=shuffle([x.wi].concat(others));
+    return {x:x, o:o, a:o.indexOf(x.wi)};
+  }), i:0, res:[], done:false};
+}
+function wtQuizView(){
+  const Q=wtQ, N=Q.list.length;
+  if(Q.i>=N){
+    const n=Q.res.filter(Boolean).length;
+    panel.innerHTML=`<div class="result">
+        <div class="score">${n}<small> / ${N}もん</small></div>
+        <p>${n===N?'ぜんぶ当たったね！ 行動から、せいかくがよく伝わる文だったよ。':'当たらなかった文は、どんな行動を足すと、そのせいかくが伝わるかな。'}</p>
+        <div class="wtrow" style="justify-content:center">
+          <button class="btn main" id="wqAgain">もう一度ちょうせん</button>
+          <button class="btn" id="wqBack">書くにもどる</button></div>
+      </div>`;
+    if(n===N){pinpon();setTimeout(party,150);}
+    $('#wqAgain').onclick=()=>{wtQuizStart();VIEWS.write();};
+    $('#wqBack').onclick=()=>{wtMode='write';VIEWS.write();};
+    return;
+  }
+  const q=Q.list[Q.i], d=WRITE.words[q.x.wi];
+  panel.innerHTML=`
+    <div class="qwrap">
+      <div class="bar">
+        <div class="lead">当てっこクイズ ${Q.i+1} / ${N}もん　行動を読んで、せいかくを当てよう。</div>
+        <div class="dots">${Q.list.map((_,k)=>`<i class="${k<Q.res.length?(Q.res[k]?'ok':'ng'):(k===Q.i?'now':'')}"></i>`).join('')}</div>
+        <button class="btn" id="wqBack">書くにもどる</button>
+      </div>
+      <div class="qcard wqcard">
+        <div class="qtext">${esc(q.x.who)}は、<span class="blank" id="blank">？</span>人だ。</div>
+        <div class="wqtext">${esc(q.x.text)}</div>
+      </div>
+      <div class="opts" style="--on:4">${q.o.map((wi,k)=>`<button class="opt ${COLORS[k%3]}" data-k="${k}">${WRITE.words[wi].w}</button>`).join('')}</div>
+      <div class="fb" id="fb"></div>
+      <div class="nextrow"><button class="btn main" id="next" hidden>${Q.i===N-1?'けっかを見る':'つぎへ ›'}</button></div>
+    </div>`;
+  let done=false;
+  panel.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    if(done)return; done=true;
+    const ok=+b.dataset.k===q.a; Q.res.push(ok);
+    panel.querySelectorAll('.opt').forEach(x=>{ x.disabled=true; const k=+x.dataset.k;
+      x.classList.add(k===q.a?'right':(x===b?'wrong':'dim')); });
+    const bl=$('#blank'); bl.textContent=d.w+(d.na?'な':''); bl.classList.add(ok?'ok':'ng');
+    const fb=$('#fb');
+    fb.innerHTML=`<div class="mark ${ok?'ok':'ng'}">${ok?'◯':'✕'}</div>
+      <div class="ex">${ok?'当たり！':'<b>正しくは「'+d.w+'」。</b>'}どの言葉から、そのせいかくが分かったかな。</div>`;
+    requestAnimationFrame(()=>fb.classList.add('show'));
+    ok?pinpon():bubu();
+    $('#next').hidden=false;
+    const dt=panel.querySelectorAll('.dots i')[Q.i]; if(dt)dt.className=ok?'ok':'ng';
+  });
+  $('#next').onclick=()=>{Q.i++;VIEWS.write();};
+  $('#wqBack').onclick=()=>{wtMode='write';VIEWS.write();};
+}
+
+/* ---- ⑤ story：これまでに学習した物語の人物のせいかくを、会話や行動を手がかりに考える ----
+   people の ex は「れいを見る」で出るれい（ないときは、れいは出ない）。物語・人物は書きかえてよい */
+const STORY = {
+  lead:'物語と人物をえらび、せいかくを表す言葉と、その手がかり（会話や行動）を書こう。',
+  stories:[
+    {t:'ごんぎつね', people:[
+      {n:'ごん', ex:{w:'いたずら好き', clue:'畑へ入っていもをほり散らしたり、ほしてある菜種がらに火をつけたりした。'}},
+      {n:'兵十'}]},
+    {t:'一つの花', people:[
+      {n:'ゆみ子'},
+      {n:'お父さん', ex:{w:'やさしい', clue:'戦争に行く日、プラットホームのはしにさいていたコスモスの花を、ゆみ子にわたした。'}},
+      {n:'お母さん'}]},
+    {t:'走れ', people:[
+      {n:'のぶよ'},{n:'けんじ'},{n:'お母さん'}]},
+    {t:'モチモチの木', people:[
+      {n:'豆太', ex:{w:'おく病', clue:'夜中には、じさまについてきてもらわないと、一人でせっちんに行けない。'}},
+      {n:'じさま', ex:{w:'やさしい', clue:'豆太が真夜中に小さい声でよんでも、すぐに目をさましてくれる。'}}]},
+    {t:'ゆうすげ村の小さな旅館', people:[
+      {n:'つぼみさん'},{n:'美月'}]},
+    {t:'サーカスのライオン', people:[
+      {n:'じんざ', ex:{w:'勇気がある', clue:'火事のアパートにとびこんで、男の子を助けた。'}},
+      {n:'男の子'}]}
+  ],
+  traits:['やさしい','勇気がある','おく病','いたずら好き','さびしがり','思いやりがある','陽気','活発','がんこ',
+          '根気強い','負けずぎらい','しっかりした','真面目','ひかえめ','おだやか','気が強い','用心深い','短気'],
+  partyAt:3
+};
+let stS=-1, stP=-1, stOther={t:'',n:''}, stTr=[], stFree='', stClue='', stList=[], stEx=false;
+VIEWS.story = function(){
+  const S=STORY.stories;
+  const other=stS===S.length;
+  const ppl=stS>=0&&!other?S[stS].people:[];
+  const cur=stS>=0&&!other&&stP>=0?ppl[stP]:null;
+  panel.innerHTML=`
+    <div class="bar"><div class="lead">${STORY.lead}</div>
+      <button class="btn" id="stEx" ${cur&&cur.ex?'':'disabled'}>${stEx?'れいをかくす':'れいを見る'}</button>
+      <button class="btn" id="stReset">もう一度</button></div>
+    <div class="st">
+      <div class="box">
+        <div class="label">❶ 物語をえらぶ</div>
+        <div class="stbooks">${S.map((s,i)=>`<button class="chip ${stS===i?'sel':''}" data-s="${i}">${s.t}</button>`).join('')}
+          <button class="chip ${other?'sel':''}" data-s="${S.length}">ほかの物語</button></div>
+        <div class="label">❷ 人物をえらぶ</div>
+        <div class="stppl">${other?`
+            <input id="stOt" maxlength="20" placeholder="物語の名前" aria-label="物語の名前">
+            <input id="stOn" maxlength="12" placeholder="人物の名前" aria-label="人物の名前">`
+          : stS<0?'<span class="none">先に❶で物語をえらぼう。</span>'
+          : ppl.map((p,i)=>`<button class="chip ${stP===i?'sel':''}" data-p="${i}">${p.n}</button>`).join('')}</div>
+        ${stEx&&cur&&cur.ex?`<div class="stex"><b>れい：${cur.n}は「${cur.ex.w}」</b><br>手がかり：${cur.ex.clue}</div>`
+          :'<div class="stex mute">教科書を読み返して、人物の<b>会話</b>や<b>行動</b>から、せいかくが分かるところをさがそう。</div>'}
+      </div>
+      <div class="box">
+        <div class="label">❸ せいかくを表す言葉（いくつえらんでもよい）</div>
+        <div class="sttraits">${STORY.traits.map(w=>`<button class="chip ${stTr.includes(w)?'sel':''}" data-t="${w}">${w}</button>`).join('')}</div>
+        <input id="stFree" class="stin" maxlength="20" placeholder="ほかの言葉は、ここに書く" aria-label="ほかのせいかくの言葉">
+        <div class="label">❹ 手がかり（その人物の会話や行動）</div>
+        <textarea id="stClue" maxlength="100" placeholder="（れい）夜中に一人でせっちんに行けない。" aria-label="手がかり"></textarea>
+        <div class="wtrow"><button class="btn main" id="stAdd">書けた！</button><span class="wtmsg" id="stMsg"></span></div>
+      </div>
+      <div class="box">
+        <div class="label">❺ まとめ</div>
+        <div class="wtlist" id="stList"></div>
+      </div>
+    </div>`;
+  $('#stFree').value=stFree; $('#stClue').value=stClue;
+  $('#stFree').oninput=e=>stFree=e.target.value;
+  $('#stClue').oninput=e=>stClue=e.target.value;
+  if(other){ $('#stOt').value=stOther.t; $('#stOn').value=stOther.n;
+    $('#stOt').oninput=e=>stOther.t=e.target.value; $('#stOn').oninput=e=>stOther.n=e.target.value; }
+  $('#stList').innerHTML = stList.length ? stList.map(x=>`<div class="wtitem stitem"><small>「${esc(x.t)}」</small><b>${esc(x.n)}</b>は、<span class="sttr">${x.tr.map(esc).join('・')}</span>。<br>手がかり：${esc(x.clue)}</div>`).join('')
+    : '<span class="none">まだありません。いろいろな人物で考えてみよう。</span>';
+  { const L=$('#stList'); L.scrollTop=L.scrollHeight; }
+  panel.querySelectorAll('.stbooks .chip').forEach(b=>b.onclick=()=>{
+    const s=+b.dataset.s; if(s!==stS){stS=s;stP=-1;stEx=false;} tone(880,0,.12,'sine',.18); VIEWS.story(); });
+  panel.querySelectorAll('.stppl .chip').forEach(b=>b.onclick=()=>{
+    stP=+b.dataset.p; stEx=false; tone(880,0,.12,'sine',.18); VIEWS.story(); });
+  panel.querySelectorAll('.sttraits .chip').forEach(b=>b.onclick=()=>{
+    const w=b.dataset.t; stTr=stTr.includes(w)?stTr.filter(x=>x!==w):stTr.concat(w);
+    b.classList.toggle('sel',stTr.includes(w)); tone(880,0,.12,'sine',.18); });
+  $('#stEx').onclick=()=>{stEx=!stEx;VIEWS.story();};
+  $('#stAdd').onclick=()=>{
+    const msg=$('#stMsg'); msg.className='wtmsg';
+    const t=other?stOther.t.trim():(stS>=0?S[stS].t:''), n=other?stOther.n.trim():(cur?cur.n:'');
+    const tr=stTr.concat(stFree.trim()?[stFree.trim()]:[]), clue=stClue.trim();
+    if(!t||!n){msg.textContent='❶❷で物語と人物をえらぼう。';bubu();return;}
+    if(!tr.length){msg.textContent='❸でせいかくを表す言葉をえらぼう。';bubu();return;}
+    if(!clue){msg.textContent='❹に手がかりの会話や行動を書こう。';bubu();return;}
+    stList.push({t:t,n:n,tr:tr,clue:clue});
+    stTr=[]; stFree=''; stClue=''; pinpon(); VIEWS.story();
+    const m=$('#stMsg'); m.className='wtmsg ok'; m.textContent='書けたね！ ほかの人物でも考えてみよう。';
+    if(stList.length===STORY.partyAt) setTimeout(party,150);
+  };
+  $('#stReset').onclick=()=>{stS=-1;stP=-1;stOther={t:'',n:''};stTr=[];stFree='';stClue='';stList=[];stEx=false;VIEWS.story();};
+};
+
+/* ---- 重要語句 ----
+   説明文：[漢字:よみ] でふりがな、{ … } で赤い太字、「。」ごとに行が分かれる。
+   r:'' で語句のふりがななし、rb:'日差' で語句の頭の字だけにふりがな。
+   WORD_IMG はカードの番号（1から）で絵を入れる。ない番号は「イラストは じゅんびちゅう」 */
+const WORD_IMG = {
+  /* 1:'data:image/jpeg;base64,…', */
+};
+const WORDS = [
+  {w:'せいかく', r:'', t:'{その[人:ひと]がもっている、[考:かんが]え[方:かた]や[行動:こうどう]のくせ}のこと。「やさしい」「[短気:たんき]」などの[言葉:ことば]で[表:あらわ]します。'},
+  {w:'行動', r:'こうどう', t:'{[何:なに]かをしようとして、[実際:じっさい]に[体:からだ]を[動:うご]かすこと}。せいかくと[行動:こうどう]は[関係:かんけい]しています。'},
+  {w:'連想', r:'れんそう', t:'{ある[言葉:ことば]や[物事:ものごと]から、それと[関係:かんけい]のあるほかのことを[思:おも]いうかべること}。「[雪:ゆき]」と[聞:き]いて「[冬:ふゆ]」を[思:おも]いうかべるのも[連想:れんそう]です。'},
+  {w:'想像', r:'そうぞう', t:'{[目:め]の[前:まえ]にないことを、[心:こころ]の[中:なか]に[思:おも]いえがくこと}。どんな[人物:じんぶつ]かを[想像:そうぞう]して、[文:ぶん]を[書:か]きます。'},
+  {w:'おだやか', r:'', t:'{[気持:きも]ちが[落:お]ち[着:つ]いていて、あらそったりおこったりしないようす}。おだやかな[人:ひと]は、いつもにこにこしています。'},
+  {w:'負けずぎらい', r:'ま', rb:'負', t:'{[人:ひと]に[負:ま]けるのが、とてもいやなせいかく}。[負:ま]けるとくやしくて、もっとがんばろうとします。'},
+  {w:'ひかえめ', r:'', t:'{[自分:じぶん]から[前:まえ]に[出:で]ようとせず、つつましくしているようす}。[自分:じぶん]が[話:はな]すより、[人:ひと]の[話:はなし]をよく[聞:き]きます。'},
+  {w:'温和', r:'おんわ', t:'{せいかくがおだやかで、やさしいようす}。「おだやか」とにた[意味:いみ]の[言葉:ことば]です。'},
+  {w:'もの静か', r:'ものしず', rb:'もの静', t:'{[口数:くちかず]が[少:すく]なく、[落:お]ち[着:つ]いているようす}。[大:おお]きな[声:こえ]を[出:だ]したり、さわいだりしません。'},
+  {w:'前向き', r:'まえむ', rb:'前向', t:'{よくないことがあっても、くよくよせず、よいほうに[考:かんが]えて[進:すす]もうとするようす}。'},
+  {w:'短気', r:'たんき', t:'{すぐにおこったり、いらいらしたりするせいかく}。「おだやか」とは[反対:はんたい]の[意味:いみ]の[言葉:ことば]です。'},
+  {w:'真面目', r:'まじめ', t:'{うそやいいかげんなことをせず、[物事:ものごと]に[一生けん命:いっしょうけんめい][取:と]り[組:く]むようす}。'},
+  {w:'おとなしい', r:'', t:'{しずかで、さわいだり[自分:じぶん]の[考:かんが]えをおしつけたりしないようす}。'},
+  {w:'勝ち気', r:'かちき', t:'{[人:ひと]に[負:ま]けたくないという[気持:きも]ちが[強:つよ]いせいかく}。「[負:ま]けずぎらい」とにた[意味:いみ]の[言葉:ことば]です。'},
+  {w:'気が強い', r:'きがつよ', rb:'気が強', t:'{[自分:じぶん]の[考:かんが]えをはっきり[言:い]い、かんたんには[引:ひ]かないせいかく}。'},
+  {w:'ゆうじゅうふだん', r:'', t:'{ぐずぐずして、なかなか[物事:ものごと]を[決:き]められないようす}。[漢字:かんじ]では「[優柔不断:ゆうじゅうふだん]」と[書:か]きます。'},
+  {w:'陽気', r:'ようき', t:'{[明:あか]るくてほがらかで、[元気:げんき]のよいようす}。[陽気:ようき]な[人:ひと]がいると、まわりも[楽:たの]しくなります。'},
+  {w:'根気強い', r:'こんきづよ', rb:'根気強', t:'{いやになったりあきたりせず、[物事:ものごと]を[最後:さいご]まで[続:つづ]けるようす}。'},
+  {w:'おく病', r:'おくびょう', t:'{ちょっとしたことでも、すぐにこわがるせいかく}。「モチモチの[木:き]」の[豆太:まめた]は、おく[病:びょう]な[男:おとこ]の[子:こ]です。'},
+  {w:'がんこ', r:'', t:'{[自分:じぶん]の[考:かんが]えをかたく[守:まも]って、[人:ひと]の[言:い]うことをなかなか[聞:き]き[入:い]れないようす}。'},
+  {w:'用心深い', r:'ようじんぶか', rb:'用心深', t:'{しっぱいしたり、[危:あぶ]ない[目:め]にあったりしないように、よく[気:き]をつけるようす}。'},
+  {w:'気まぐれ', r:'き', rb:'気', t:'{その[時:とき]の[気分:きぶん]で、[考:かんが]えや[行動:こうどう]がころころ[変:か]わるようす}。'},
+  {w:'活発', r:'かっぱつ', t:'{[元気:げんき]がよく、いきいきと[動:うご]き[回:まわ]るようす}。[活発:かっぱつ]な[人:ひと]は、[外:そと]で[遊:あそ]ぶのが[大:だい]すきです。'},
+  {w:'しっかりした', r:'', t:'{[考:かんが]えや[行動:こうどう]がたしかで、たよりになるようす}。しっかりした[人:ひと]には、[安心:あんしん]して[仕事:しごと]をまかせられます。'}
+];
+
+/* ▲▲▲ 書きかえるのはここまで ▲▲▲ */
+
+
+/* ===== reveal のうごき（さわらない） ===== */
+let rvOpen=[], rvPage=0;
+VIEWS.reveal = function(){
+  const C=REVEAL.cards, per=REVEAL.per||C.length, pages=Math.ceil(C.length/per);
+  if(rvOpen.length!==C.length) rvOpen=C.map(()=>false);
+  if(rvPage>=pages) rvPage=0;
+  const from=rvPage*per, idx=C.map((_,i)=>i).slice(from,from+per);
+  const pageDone=p=>C.slice(p*per,p*per+per).every((_,k)=>rvOpen[p*per+k]);
+  const CN='①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳';
+  const label=p=>{const a=p*per+1,b=Math.min((p+1)*per,C.length),n=k=>CN[k-1]||String(k);return a===b?n(a):n(a)+'〜'+n(b);};
+  panel.innerHTML=`
+    <div class="bar">
+      <div class="lead">${REVEAL.lead}</div>
+      ${pages>1?`<div class="seg" role="tablist" aria-label="問題の切りかえ">${Array.from({length:pages},(_,p)=>
+        `<button class="${p===rvPage?'on':''}" data-p="${p}">${label(p)}${pageDone(p)?'<span class="ck">✓</span>':''}</button>`).join('')}</div>`:''}
+      <button class="btn" id="rvReset">もう一度</button>
+    </div>
+    <div class="cards" style="--cn:${Math.min(idx.length,4)}">${idx.map(i=>{
+      const c=C[i], open=rvOpen[i];
+      const btn=`<button class="word ${open?'open':''}" data-i="${i}" aria-label="${i+1}つめの答えを見る">${open?c.a:'？'}</button>`;
+      const pic=c.img?(open?`<div class="lpic" style="background-image:url('${c.img}')"></div>`:'<div class="lpic wait">「？」をおすと、絵が出るよ</div>'):'';
+      return `<section class="card ${c.c||COLORS[i%3]}">
+        ${c.num?`<div class="num">${c.num}</div>`:''}
+        <div class="sent">${c.text.replace('□',btn)}</div>
+        ${pic}
+        <div class="how ${open?'show':''}">${c.how||''}</div>
+      </section>`;}).join('')}
+    </div>
+    ${REVEAL.choices&&REVEAL.choices.length?`<div class="rvlist">
+      <div class="label">せいかくを表す言葉（この中から考えよう）</div>
+      <div class="rvwords">${REVEAL.choices.map(w=>`<span class="rvw">${w}</span>`).join('')}</div>
+    </div>`:''}`;
+  panel.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
+    rvPage=+b.dataset.p; panel.style.animation='none';panel.offsetHeight;panel.style.animation=''; VIEWS.reveal(); });
+  $('#rvReset').onclick=()=>{idx.forEach(i=>rvOpen[i]=false);VIEWS.reveal();};   /* いま出ているカードだけとじる */
+  panel.querySelectorAll('.sent .word').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i; if(rvOpen[i])return;
+    rvOpen[i]=true; pinpon(); VIEWS.reveal();
+    if(idx.every(k=>rvOpen[k]))setTimeout(party,200);
+  });
+};
+
+/* ===== quiz のうごき（さわらない） ===== */
+let qList=null, qi=0, qres=[], answered=false;
+function quizStart(){ qList=QUIZ.shuffle?shuffle(QUIZ.qs):QUIZ.qs.slice(); qi=0; qres=[];
+  if(QUIZ.shuffleOpts) qList=qList.map(q=>{ const ix=shuffle(q.o.map((_,k)=>k)); return Object.assign({},q,{o:ix.map(k=>q.o[k]),a:ix.indexOf(q.a)}); }); }
+VIEWS.quiz = function(){
+  if(!qList) quizStart();
+  if(qi>=qList.length) return quizResult();
+  const q=qList[qi];
+  const blank='<span class="blank" id="blank">　</span>';
+  const qhtml=q.q.includes('□')?q.q.replace('□',blank):q.q;
+  panel.innerHTML=`
+    <div class="qwrap">
+      <div class="bar">
+        <div class="lead">${qi+1} / ${qList.length}もん</div>
+        <div class="dots">${qList.map((_,k)=>`<i class="${k<qres.length?(qres[k]?'ok':'ng'):(k===qi?'now':'')}"></i>`).join('')}</div>
+      </div>
+      <div class="qcard">
+        ${q.tag?`<div class="qtag">${q.tag}</div>`:''}
+        <div class="qtext">${qhtml}</div>
+      </div>
+      <div class="opts" style="--on:${q.o.length}">${q.o.map((o,k)=>`<button class="opt ${COLORS[k%3]}" data-k="${k}">${o}</button>`).join('')}</div>
+      <div class="fb" id="fb"></div>
+      <div class="nextrow"><button class="btn main" id="next" hidden>${qi===qList.length-1?'けっかを見る':'つぎへ ›'}</button></div>
+    </div>`;
+  answered=false;
+  panel.querySelectorAll('.opt').forEach(b=>b.onclick=()=>quizAnswer(b));
+  $('#next').onclick=()=>{qi++;VIEWS.quiz();};
+};
+function quizAnswer(b){
+  if(answered)return; answered=true;
+  const q=qList[qi], k=+b.dataset.k, ok=k===q.a; qres.push(ok);
+  panel.querySelectorAll('.opt').forEach(x=>{
+    x.disabled=true; const xk=+x.dataset.k;
+    if(xk===q.a)x.classList.add('right'); else if(x===b)x.classList.add('wrong'); else x.classList.add('dim');
+  });
+  const bl=$('#blank'); if(bl){bl.innerHTML=q.o[q.a]; bl.classList.add(ok?'ok':'ng');}
+  const fb=$('#fb');
+  fb.innerHTML=`<div class="mark ${ok?'ok':'ng'}">${ok?'◯':'✕'}</div>
+    <div class="ex">${ok?'':'<b>正しくは「'+q.o[q.a]+'」。</b>'}${q.e||''}
+      ${q.alt?`<div class="alt">${q.altLabel?`<small>${q.altLabel}</small>`:''}${q.alt}</div>`:''}</div>`;
+  requestAnimationFrame(()=>fb.classList.add('show'));
+  ok?pinpon():bubu();
+  $('#next').hidden=false;
+  const d=panel.querySelectorAll('.dots i')[qi]; if(d){d.className=ok?'ok':'ng';}
+}
+function quizResult(){
+  const n=qres.filter(Boolean).length, all=qList.length;
+  const msg=n===all?QUIZ.msg.perfect:n>=QUIZ.goodAt?QUIZ.msg.good:QUIZ.msg.low;
+  panel.innerHTML=`<div class="result">
+      <div class="score">${n}<small> / ${all}もん</small></div>
+      <p>${msg}</p>
+      <button class="btn main" id="retry">もう一度ちょうせん</button>
+    </div>`;
+  if(n===all){pinpon();setTimeout(party,150);}
+  $('#retry').onclick=()=>{quizStart();VIEWS.quiz();};
+}
+
+/* ===== 重要語句のうごき（ひな形1・つなぐ言葉と同じ。さわらない） ===== */
+VIEWS.words = function(){
+  panel.innerHTML=`
+    <div class="wdocs">
+      <div class="wboard">
+        <div class="wgridbox" id="wgridbox"><div class="wgrid" id="wgrid"></div></div>
+        <div class="wpager" id="wpager"></div>
+      </div>
+      <div class="wdetail">
+        <div class="wd-head">
+          <span class="wd-no" id="wdNo"></span><b class="wd-word" id="wdWord"></b>
+          <div class="wd-nav">
+            <button id="wdPrev" aria-label="前の語句">‹</button>
+            <button id="wdNext" aria-label="次の語句">›</button>
+          </div>
+        </div>
+        <p class="wd-txt" id="wdTxt"></p>
+        <p class="wd-tip">カードをおすと、左で絵が大きくなります。大きくなった絵をおすと、一覧にもどります。</p>
+      </div>
+    </div>`;
+  function wordTxtHTML(t){
+    return t.split('。').filter(s=>s).map(s=>'<span class="wl">' +
+      s.replace(/\[([^:\]]+):([^\]]+)\]/g,'<ruby>$1<rt>$2</rt></ruby>')
+       .replace(/\{/g,'<em>').replace(/\}/g,'</em>') + '。</span>').join('');
+  }
+  const W_PER = 12;
+  const wgrid = document.getElementById('wgrid'), wpager = document.getElementById('wpager'),
+        wboard = document.getElementById('wgridbox');
+  let wPage = 0, wCur = 0;
+  function wRuby(d){
+    if(!d.r) return d.w;
+    const base = d.rb || d.w;
+    return '<ruby>' + base + '<rt>' + d.r + '</rt></ruby>' + d.w.slice(base.length);
+  }
+  function wPic(i, big){
+    const src = WORD_IMG[i+1];
+    if(src) return '<div class="wpic has" style="background-image:url(\'' + src + '\')"></div>';
+    return '<div class="wpic">' + (big ? '<span class="wbigword">' + WORDS[i].w + '</span>' : '<span class="wph">イラストは<br>じゅんびちゅう</span>') + '</div>';
+  }
+  function wDrawPager(){
+    const n = Math.ceil(WORDS.length / W_PER);
+    wpager.innerHTML = '';
+    if(n < 2) return;
+    for(let p = 0; p < n; p++){
+      const b = document.createElement('button');
+      b.textContent = (p*W_PER+1) + '〜' + Math.min((p+1)*W_PER, WORDS.length);
+      b.classList.toggle('on', p === wPage);
+      b.addEventListener('click', ()=>{ if(p !== wPage){ wShowPage(p); } else wCloseBig(); });
+      wpager.appendChild(b);
+    }
+  }
+  function wShowPage(p){
+    wPage = p; wCloseBig();
+    wgrid.innerHTML = '';
+    for(let k = 0; k < W_PER; k++){
+      const i = p*W_PER + k;
+      const b = document.createElement('button');
+      if(i >= WORDS.length){ b.className = 'wcard blank'; b.tabIndex = -1; wgrid.appendChild(b); continue; }
+      b.className = 'wcard' + (i === wCur ? ' on' : '');
+      b.dataset.i = i;
+      b.innerHTML = '<span class="wno">' + (i+1) + '</span>' + wPic(i, false) + '<span class="wcap">' + wRuby(WORDS[i]) + '</span>';
+      b.setAttribute('aria-label', (i+1) + ' ' + WORDS[i].w);
+      b.addEventListener('click', ()=>{ wSelect(i); wOpenBig(i); });
+      wgrid.appendChild(b);
+    }
+    wgrid.classList.remove('flip'); void wgrid.offsetWidth; wgrid.classList.add('flip');
+    wDrawPager();
+  }
+  function wSelect(i){
+    wCur = i;
+    document.getElementById('wdNo').textContent = i + 1;
+    document.getElementById('wdWord').innerHTML = wRuby(WORDS[i]);
+    document.getElementById('wdTxt').innerHTML = wordTxtHTML(WORDS[i].t);
+    wgrid.querySelectorAll('.wcard').forEach(c=>c.classList.toggle('on', +c.dataset.i === i));
+  }
+  function wCloseBig(){ const o = wboard.querySelector('.wbig'); if(o) o.remove(); }
+  function wOpenBig(i){
+    wCloseBig();
+    const big = document.createElement('div');
+    big.className = 'wbig';
+    big.innerHTML = wPic(i, true) + '<span class="wbigcap">' + wRuby(WORDS[i]) + '</span>' +
+      '<span class="wback">絵をおすと、カードの一覧にもどります</span>';
+    big.addEventListener('click', wCloseBig);
+    wboard.appendChild(big);
+  }
+  function wStep(dir){
+    const i = (wCur + dir + WORDS.length) % WORDS.length;
+    const p = Math.floor(i / W_PER);
+    const opened = !!wboard.querySelector('.wbig');
+    if(p !== wPage) wShowPage(p);
+    wSelect(i);
+    if(opened) wOpenBig(i);
+  }
+  document.getElementById('wdPrev').addEventListener('click', ()=>wStep(-1));
+  document.getElementById('wdNext').addEventListener('click', ()=>wStep(1));
+  if(WORDS.length){ wShowPage(0); wSelect(0); }
+};
+
+/* ===== 見出しとタブ（さわらない） ===== */
+$('#eyebrow').innerHTML=UNIT.eyebrow;
+$('#title').innerHTML=UNIT.title;
+document.title=UNIT.title.replace(/<rt>.*?<\/rt>/g,'').replace(/<[^>]+>/g,'');
+const nav=$('#tabs');
+nav.style.setProperty('--n',TABS.length);
+TABS.forEach((t,i)=>{
+  if(!VIEWS[t.view]) console.error('タブの view「'+t.view+'」がありません');
+  const sub=t.sub==='auto'&&t.view==='quiz'?QUIZ.qs.length+'もん':t.sub;
+  const b=document.createElement('button');
+  b.className='tab'+(t.view==='words'?' word':'');
+  b.setAttribute('role','tab');
+  b.setAttribute('aria-selected',i===0?'true':'false');
+  b.innerHTML=t.tab+(sub?`<small>${sub}</small>`:'');
+  b.onclick=()=>{
+    ac();
+    nav.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===b?'true':'false'));
+    panel.style.animation='none';panel.offsetHeight;panel.style.animation='';
+    if(VIEWS[t.view])VIEWS[t.view]();
+  };
+  nav.appendChild(b);
+});
+if(TABS.length&&VIEWS[TABS[0].view])VIEWS[TABS[0].view]();
+</script>
+</body>
+</html>
